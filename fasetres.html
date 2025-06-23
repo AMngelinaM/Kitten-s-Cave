@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fase dos novelos</title>
+    <link rel="stylesheet" href="CSS/faseum.css" />
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script src="JS/animacao.js"></script>
+    <script src="JS/vidas2.js"></script>
+    <script src="JS/novelos.js"></script>
+    <script>
+      alert("Tenho que coletar. Por que são diferentes?");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      let tempoRestante = 120; // tempo total: 2 minutos
+
+      let pontos = 0;
+
+      let intervaloTimer; // usado para armazenar o setInterval
+      let mostrarMensagemFalha = false;
+
+      // Inicia o cronômetro
+      intervaloTimer = setInterval(() => {
+        tempoRestante--;
+        if (tempoRestante <= 0) {
+          clearInterval(intervaloTimer);
+          if (novelosRoxosColetados < 5) {
+            mostrarMensagemFalha = true;
+            setTimeout(() => {
+              window.location.reload(); // Reinicia a fase após 3 segundos
+            }, 3000);
+          } else {
+            window.location.href = "fasequatro.html";
+          }
+        }
+      }, 1000);
+      canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        // Ajusta para escala do canvas
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+        checarCliqueNovelo(mouseX - camera.offsetX, mouseY - camera.offsetY);
+      });
+
+      inicializarVidas();
+
+      const fundo = new Image();
+      fundo.src = "./IMG/novelos.png"; // substitua pela sua imagem real
+
+      const spriteGato = new Image();
+      spriteGato.src = "./IMG/gato.png"; // substitua pelo caminho da sua spritesheet
+
+      const gato = {
+        x: 50,
+        y: 200,
+        larguraSprite: 256, // Largura de cada frame do sprite
+        alturaSprite: 256, // Altura de cada frame do sprite
+        largura: 100, // Largura a ser desenhada no canvas
+        altura: 100, // Altura a ser desenhada no canvas
+        velocidade: 4,
+        frameX: 0, // Coluna do frame atual
+        frameY: 0, // Linha do frame atual
+        tick: 0, // Contador para controlar a animação
+        framesPorAnimacao: 10, // Quantos ticks por frame de animação
+      };
+
+      const teclado = {};
+      document.addEventListener("keydown", (e) => (teclado[e.key] = true));
+      document.addEventListener("keyup", (e) => (teclado[e.key] = false));
+
+      const camera = {
+        offsetX: 0,
+        offsetY: 0,
+        larguraCenario: 1000,
+        alturaCenario: 600,
+        atualizar() {
+          this.offsetX = canvas.width / 2 - (gato.x + gato.largura / 2);
+          this.offsetY = canvas.height / 2 - (gato.y + gato.altura / 2);
+
+          this.offsetX = Math.min(
+            0,
+            Math.max(this.offsetX, canvas.width - this.larguraCenario)
+          );
+          this.offsetY = Math.min(
+            0,
+            Math.max(this.offsetY, canvas.height - this.alturaCenario)
+          );
+        },
+      };
+
+      function atualizar() {
+        atualizarNovelos(); // ← Atualiza posição dos novelos caindo
+      }
+
+      function desenharTimer(ctx) {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "right";
+        const minutos = Math.floor(tempoRestante / 60);
+        const segundos = tempoRestante % 60;
+        const tempoFormatado = `${minutos}:${
+          segundos < 10 ? "0" + segundos : segundos
+        }`;
+        ctx.fillText(tempoFormatado, canvas.width - 10, 30); // canto superior direito
+      }
+
+      function desenharPontuacao(ctx) {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.fillText(pontos, canvas.width / 2, 40); // << no topo central
+      }
+
+      function desenhar() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(camera.offsetX, camera.offsetY);
+
+        // Desenha o fundo
+        ctx.drawImage(fundo, 0, 0);
+
+        // Desenha o sprite do gato
+        ctx.drawImage(
+          spriteGato,
+          gato.frameX * gato.larguraSprite,
+          gato.frameY * gato.alturaSprite,
+          gato.larguraSprite,
+          gato.alturaSprite,
+          gato.x,
+          gato.y,
+          gato.largura,
+          gato.altura
+        );
+
+        desenharNovelos(ctx, camera.offsetX, camera.offsetY); // ← Desenha os novelos
+
+        ctx.restore();
+
+        desenharVidas(ctx); // ← Desenha os corações (vidas)
+        desenharTimer(ctx); // ← Desenha o timer no canto superior direito
+        desenharPontuacao(ctx);
+
+        if (mostrarMensagemFalha) {
+          // Fundo escuro
+          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Texto da mensagem
+          const mensagens = [
+            "Tentou ser esperto, né?",
+            "Colete os novelos para passar de fase",
+          ];
+
+          ctx.font = "28px sans-serif";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+
+          mensagens.forEach((linha, i) => {
+            ctx.fillText(
+              linha,
+              canvas.width / 2,
+              canvas.height / 2 + i * 40 // 40 pixels entre as linhas
+            );
+          });
+
+          return; // para desenhar o resto do jogo enquanto mensagem aparece
+        }
+      }
+
+      function loop() {
+        atualizar();
+        camera.atualizar();
+        desenhar();
+        requestAnimationFrame(loop);
+      }
+
+      // Garante que a imagem do sprite seja carregada antes de iniciar o loop
+      spriteGato.onload = () => {
+        fundo.onload = () => {
+          camera.larguraCenario = fundo.width;
+          camera.alturaCenario = fundo.height;
+          loop();
+        };
+        if (fundo.complete) {
+          camera.larguraCenario = fundo.width;
+          camera.alturaCenario = fundo.height;
+          loop();
+        }
+      };
+
+      if (spriteGato.complete && fundo.complete) {
+        camera.larguraCenario = fundo.width;
+        camera.alturaCenario = fundo.height;
+        loop();
+      }
+    </script>
+  </body>
+</html>

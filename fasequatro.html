@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fase das armadilhas</title>
+    <link rel="stylesheet" href="CSS/faseum.css" />
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script src="JS/animacao.js"></script>
+    <script src="JS/vidas3.js"></script>
+    <script src="JS/agua.js"></script>
+    <script>
+      alert("Eca. Molhado.");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // TIMER
+      let tempoRestante = 120; // tempo em segundos
+      let intervaloTimer = null;
+
+      function iniciarTimer() {
+        if (intervaloTimer) clearInterval(intervaloTimer);
+        tempoRestante = 120;
+        intervaloTimer = setInterval(() => {
+          if (tempoRestante > 0) {
+            tempoRestante--;
+            // Quando o tempo acabar, vai para a próxima fase
+            if (tempoRestante === 0) {
+              clearInterval(intervaloTimer);
+              window.location.href = "fasecinco.html"; // Troque para o nome da próxima fase
+            }
+          }
+        }, 1000);
+      }
+
+      inicializarVidas();
+      iniciarTimer();
+
+      const fundo = new Image();
+      fundo.src = "./IMG/agua.png"; // substitua pela sua imagem real
+
+      const spriteGato = new Image();
+      spriteGato.src = "./IMG/gato.png"; // substitua pelo caminho da sua spritesheet
+
+      const gato = {
+        x: 50,
+        y: 200,
+        larguraSprite: 256,
+        alturaSprite: 256,
+        largura: 100,
+        altura: 100,
+        velocidade: 3,
+        frameX: 0,
+        frameY: 0,
+        tick: 0,
+        framesPorAnimacao: 10,
+      };
+
+      const teclado = {};
+      document.addEventListener("keydown", (e) => (teclado[e.key] = true));
+      document.addEventListener("keyup", (e) => (teclado[e.key] = false));
+
+      const camera = {
+        offsetX: 0,
+        offsetY: 0,
+        larguraCenario: 600,
+        alturaCenario: 600,
+        atualizar() {
+          this.offsetX = canvas.width / 2 - (gato.x + gato.largura / 2);
+          this.offsetY = canvas.height / 2 - (gato.y + gato.altura / 2);
+
+          this.offsetX = Math.min(
+            0,
+            Math.max(this.offsetX, canvas.width - this.larguraCenario)
+          );
+          this.offsetY = Math.min(
+            0,
+            Math.max(this.offsetY, canvas.height - this.alturaCenario)
+          );
+        },
+      };
+
+      function desenharTimer(ctx) {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "right";
+        const minutos = Math.floor(tempoRestante / 60);
+        const segundos = tempoRestante % 60;
+        const tempoFormatado = `${minutos}:${
+          segundos < 10 ? "0" + segundos : segundos
+        }`;
+        ctx.fillText(tempoFormatado, canvas.width - 10, 30); // canto superior direito
+      }
+
+      function atualizar() {
+        let direcaoX = 0;
+        let direcaoY = 0;
+
+        if (teclado["ArrowRight"]) direcaoX = 1;
+        if (teclado["ArrowLeft"]) direcaoX = -1;
+        if (teclado["ArrowUp"]) direcaoY = -1;
+        if (teclado["ArrowDown"]) direcaoY = 1;
+
+        gato.x += direcaoX * gato.velocidade;
+        gato.y += direcaoY * gato.velocidade;
+
+        // Atualiza a animação do sprite apenas se houver movimento
+        if (direcaoX !== 0 || direcaoY !== 0) {
+          gato.tick++;
+          if (gato.tick > gato.framesPorAnimacao) {
+            gato.tick = 0;
+            gato.frameX++;
+            if (gato.frameX > 3) gato.frameX = 0;
+          }
+
+          if (direcaoY === -1) {
+            gato.frameY = 2;
+          } else if (direcaoY === 1) {
+            gato.frameY = 1;
+          } else if (direcaoX === -1) {
+            gato.frameY = 4;
+          } else if (direcaoX === 1) {
+            gato.frameY = 3;
+          }
+        } else {
+          gato.frameX = 0;
+          gato.frameY = 0;
+        }
+
+        // Restringir dentro do cenário
+        gato.x = Math.max(
+          0,
+          Math.min(gato.x, camera.larguraCenario - (gato.largura - 0))
+        );
+        gato.y = Math.max(
+          150,
+          Math.min(gato.y, camera.alturaCenario - (gato.altura + 0))
+        );
+      }
+
+      function desenhar() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(camera.offsetX, camera.offsetY);
+
+        // Desenha o fundo
+        ctx.drawImage(fundo, 0, 0);
+
+        // Desenha o sprite do gato
+        ctx.drawImage(
+          spriteGato,
+          gato.frameX * gato.larguraSprite,
+          gato.frameY * gato.alturaSprite,
+          gato.larguraSprite,
+          gato.alturaSprite,
+          gato.x,
+          gato.y,
+          gato.largura,
+          gato.altura
+        );
+
+        ctx.restore();
+
+        desenharVidas(ctx); // HUD fixo na tela
+        desenharTimer(ctx); // Timer fixo no canto superior direito
+      }
+
+      function loop() {
+        atualizar();
+        atualizarGotas(gato);
+        camera.atualizar();
+        desenhar();
+        desenharGotas(ctx, camera);
+        requestAnimationFrame(loop);
+      }
+
+      // Garante que a imagem do sprite seja carregada antes de iniciar o loop
+      spriteGato.onload = () => {
+        fundo.onload = () => {
+          camera.larguraCenario = fundo.width;
+          camera.alturaCenario = fundo.height;
+          loop();
+        };
+        if (fundo.complete) {
+          camera.larguraCenario = fundo.width;
+          camera.alturaCenario = fundo.height;
+          loop();
+        }
+      };
+
+      if (spriteGato.complete && fundo.complete) {
+        camera.larguraCenario = fundo.width;
+        camera.alturaCenario = fundo.height;
+        loop();
+      }
+    </script>
+  </body>
+</html>

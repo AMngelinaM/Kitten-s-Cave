@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kitten's cave</title>
+    <link rel="stylesheet" href="CSS/style.css" />
+  </head>
+  <body>
+    <!-- Cutscene em vídeo -->
+    <div id="cutsceneContainer">
+      <video id="cutsceneVideo" autoplay muted playsinline>
+        <source src="./VID/cutscene.mp4" type="video/mp4" />
+        Seu navegador não suporta vídeo.
+      </video>
+    </div>
+
+    <!-- Tela inicial (fica por baixo, aparece após o fade) -->
+    <div id="conteudoInicial" style="display: none">
+      <audio id="audio" src="./SND/musicadefundo.mp3" loop autoplay></audio>
+      <div class="botao">
+        <a href="primeiro_cenario.html" target="_blank">
+          <img src="IMG/botao.png" alt="play" />
+        </a>
+      </div>
+      <div class="botao2">
+        <a href="creditos.html" target="_blank">
+          <img src="./IMG/creditos.png" alt="créditos" />
+        </a>
+      </div>
+    </div>
+
+    <script>
+      // Referências
+      const cutscene = document.getElementById("cutsceneContainer");
+      const video = document.getElementById("cutsceneVideo");
+      const conteudo = document.getElementById("conteudoInicial");
+
+      // Quando o vídeo terminar, faz fade out e mostra tela inicial
+      video.onended = function () {
+        cutscene.classList.add("fadeout");
+        setTimeout(() => {
+          cutscene.style.display = "none";
+          conteudo.style.display = "flex";
+        }, 1000);
+      };
+
+      // Permite pular a cutscene com clique
+      cutscene.onclick = function () {
+        video.pause();
+        cutscene.classList.add("fadeout");
+        setTimeout(() => {
+          cutscene.style.display = "none";
+          conteudo.style.display = "flex";
+        }, 1000);
+      };
+
+      // Áudio de fundo: garante que toca após interação se bloqueado
+      window.addEventListener("load", function () {
+        const audio = document.getElementById("audio");
+        audio.play().catch(function () {});
+      });
+      document.addEventListener("click", function () {
+        const audio = document.getElementById("audio");
+        if (audio.paused) {
+          audio.play();
+        }
+      });
+    </script>
+  </body>
+</html>

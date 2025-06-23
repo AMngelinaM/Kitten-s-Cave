@@ -1,0 +1,64 @@
+/* Cursor personalizado para toda a tela e botões */
+body,
+#conteudoInicial,
+.botao img,
+.botao2 img {
+  cursor: url("../IMG/pata2.png"), auto;
+}
+
+/* Cutscene cobre toda a tela */
+#cutsceneContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 1s;
+}
+#cutsceneContainer.fadeout {
+  opacity: 0;
+  pointer-events: none;
+}
+#cutsceneVideo {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  background: #000;
+  display: block;
+}
+#conteudoInicial {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: url("../IMG/fundo.png") center center no-repeat;
+  background-size: cover;
+  z-index: 1;
+}
+.botao {
+  margin-top: 350px;
+  margin-bottom: 16px;
+}
+.botao2 {
+  margin-bottom: 16px;
+}
+.botao img,
+.botao2 img {
+  width: 200px;
+  transition: transform 0.2s;
+}
+.botao img:hover,
+.botao2 img:hover {
+  transform: scale(1.08);
+}

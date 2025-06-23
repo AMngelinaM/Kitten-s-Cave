@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="CSS/creditos.css" />
+  </head>
+  <body>
+    <script>
+      //para o chat, abrir ctrl+alt+i
+      // Tenta reproduzir o áudio ao carregar a página
+      window.addEventListener("load", function () {
+        const audio = document.getElementById("audio");
+        audio.play().catch(function (error) {
+          console.log(
+            "Reprodução automática bloqueada. O áudio será iniciado após interação do usuário."
+          );
+        });
+      });
+
+      // Garante que o áudio será iniciado após interação do usuário
+      document.addEventListener("click", function () {
+        const audio = document.getElementById("audio");
+        if (audio.paused) {
+          audio.play();
+        }
+      });
+    </script>
+  </body>
+</html>

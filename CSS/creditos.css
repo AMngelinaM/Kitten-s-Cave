@@ -1,0 +1,8 @@
+body {
+    margin: 0; /* Remove margens padrão */
+    padding: 0; /* Remove espaçamento padrão */
+    background-image: url('../IMG/fundo_creditos.png'); /* Caminho para a imagem */
+    background-size: cover; /* Faz a imagem cobrir toda a página */
+    background-repeat: no-repeat; /* Evita repetição da imagem */
+    position: relative;
+}

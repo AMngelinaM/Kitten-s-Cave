@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Final</title>
+    <link rel="stylesheet" href="CSS/faseum.css" />
+  </head>
+  <body>
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <script src="JS/animacao.js"></script>
+    <script src="JS/flores.js"></script>
+    <script src="JS/porta.js"></script>
+    <script>
+      alert("Só mais um pouco, não desista...");
+
+      // Pega o canvas e o contexto 2D para desenhar
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Carrega a imagem do fundo
+      const fundo = new Image();
+      fundo.src = "./IMG/ultimasala/fimcaverna.png"; // caminho da imagem do cenário
+
+      // Carrega a spritesheet do gato
+      const spriteGato = new Image();
+      spriteGato.src = "./IMG/gato.png"; // caminho da spritesheet do gato
+
+      // Carrega as imagens dos obstáculos
+      const troncoum = new Image();
+      troncoum.src = "./IMG/ultimasala/troncoum.png";
+
+      const troncodois = new Image();
+      troncodois.src = "./IMG/ultimasala/troncodois.png";
+
+      const cogum = new Image();
+      cogum.src = "./IMG/ultimasala/cogum.png";
+
+      const cogdois = new Image();
+      cogdois.src = "./IMG/ultimasala/cogdois.png";
+
+      const cogtres = new Image();
+      cogtres.src = "./IMG/ultimasala/cogtres.png";
+
+      // Lista de obstáculos com posição, tamanho e imagem
+      const obstaculos = [
+        { x: 800, y: 400, width: 128, height: 64, img: troncoum },
+        { x: 1560, y: 370, width: 64, height: 64, img: troncodois },
+        { x: 350, y: 230, width: 48, height: 48, img: cogum },
+        { x: 430, y: 502, width: 48, height: 48, img: cogdois },
+        { x: 890, y: 250, width: 48, height: 48, img: cogtres },
+      ];
+
+      // Define o objeto do gato com posição, tamanho, velocidade e animação
+      const gato = {
+        x: 130,
+        y: 130,
+        larguraSprite: 256, // largura de um frame na spritesheet
+        alturaSprite: 256, // altura de um frame na spritesheet
+        largura: 80, // largura do desenho no canvas
+        altura: 80, // altura do desenho no canvas
+        velocidade: 3, // velocidade de movimento
+        frameX: 0, // frame atual (coluna) da spritesheet
+        frameY: 0, // frame atual (linha) da spritesheet
+        tick: 0, // contador para animação
+        framesPorAnimacao: 10, // ticks por frame de animação
+
+        // Define a hitbox menor dentro do sprite para colisão
+        hitbox: {
+          offsetX: 15, // distância da borda esquerda até a hitbox
+          offsetY: 30, // distância da borda superior até a hitbox
+          largura: 40, // largura da hitbox (menor que 80)
+          altura: 40, // altura da hitbox (menor que 80)
+        },
+      };
+
+      gato.floresColetadas = 0;
+
+      // Objeto para controlar quais teclas estão pressionadas
+      const teclado = {};
+      document.addEventListener("keydown", (e) => (teclado[e.key] = true));
+      document.addEventListener("keyup", (e) => (teclado[e.key] = false));
+
+      // Câmera para acompanhar o gato e limitar visão ao canvas
+      const camera = {
+        offsetX: 0,
+        offsetY: 0,
+        larguraCenario: 2000, // tamanho total do cenário (ajustado depois)
+        alturaCenario: 800,
+        atualizar() {
+          // Centraliza a câmera no meio do gato
+          this.offsetX = canvas.width / 2 - (gato.x + gato.largura / 2);
+          this.offsetY = canvas.height / 2 - (gato.y + gato.altura / 2);
+
+          // Limita a câmera para não mostrar áreas fora do cenário
+          this.offsetX = Math.min(
+            0,
+            Math.max(this.offsetX, canvas.width - this.larguraCenario)
+          );
+          this.offsetY = Math.min(
+            0,
+            Math.max(this.offsetY, canvas.height - this.alturaCenario)
+          );
+        },
+      };
+
+      // Função que verifica colisão entre o gato (usando a hitbox) e os obstáculos
+      function colisaoComObstaculos(x, y) {
+        // Calcula posição da hitbox no cenário
+        const hitboxX = x + gato.hitbox.offsetX;
+        const hitboxY = y + gato.hitbox.offsetY;
+        const hitboxLargura = gato.hitbox.largura;
+        const hitboxAltura = gato.hitbox.altura;
+
+        // Verifica para cada obstáculo se houve colisão
+        for (const obs of obstaculos) {
+          if (
+            hitboxX < obs.x + obs.width &&
+            hitboxX + hitboxLargura > obs.x &&
+            hitboxY < obs.y + obs.height &&
+            hitboxY + hitboxAltura > obs.y
+          ) {
+            return true; // Colidiu com obstáculo
+          }
+        }
+        return false; // Não colidiu com nenhum obstáculo
+      }
+
+      // Função que atualiza posição e estado do gato
+      function atualizar() {
+        // Variáveis para direção de movimento horizontal e vertical
+        let direcaoX = 0;
+        let direcaoY = 0;
+
+        // Verifica teclas pressionadas e atualiza direção
+        if (teclado["ArrowRight"]) direcaoX = 1;
+        if (teclado["ArrowLeft"]) direcaoX = -1;
+        if (teclado["ArrowUp"]) direcaoY = -1;
+        if (teclado["ArrowDown"]) direcaoY = 1;
+
+        // Calcula próxima posição do gato baseado na velocidade e direção
+        const proxX = gato.x + direcaoX * gato.velocidade;
+        const proxY = gato.y + direcaoY * gato.velocidade;
+
+        // Só atualiza posição se não houver colisão com obstáculos
+        if (!colisaoComObstaculos(proxX, proxY)) {
+          gato.x = proxX;
+          gato.y = proxY;
+        }
+
+        // Atualiza animação do sprite apenas se estiver se movendo
+        if (direcaoX !== 0 || direcaoY !== 0) {
+          gato.tick++;
+          if (gato.tick > gato.framesPorAnimacao) {
+            gato.tick = 0;
+            gato.frameX++;
+            if (gato.frameX > 3) gato.frameX = 0;
+          }
+
+          // Define a linha da spritesheet conforme direção do movimento
+          if (direcaoY === -1) {
+            gato.frameY = 2; // para cima
+          } else if (direcaoY === 1) {
+            gato.frameY = 1; // para baixo
+          } else if (direcaoX === -1) {
+            gato.frameY = 4; // para esquerda
+          } else if (direcaoX === 1) {
+            gato.frameY = 3; // para direita
+          }
+        } else {
+          // Se parado, usa frame estático padrão (parado para baixo)
+          gato.frameX = 0;
+          gato.frameY = 0;
+        }
+
+        // Limita o gato para não sair dos limites do cenário
+        gato.x = Math.max(
+          20,
+          Math.min(gato.x, camera.larguraCenario - (gato.largura + 50))
+        );
+        gato.y = Math.max(
+          100,
+          Math.min(gato.y, camera.alturaCenario - (gato.altura + 160))
+        );
+
+        verificarColetaDeFlores();
+
+        if (
+          typeof flores !== "undefined" &&
+          flores.every((flor) => flor.coletada)
+        ) {
+          iniciarAnimacaoPorta(); // função do porta.js
+        }
+
+        atualizarPorta(); // função do porta.js
+
+        // Verifica colisão com a porta final e redireciona
+
+        const margemX = 20; // diminui 20px de cada lado no X
+
+        if (
+          portaAnimacaoFinalizada &&
+          portaMostrarFinal &&
+          gato.x + gato.largura > portaX + margemX &&
+          gato.x < portaX + portaLarguraFrame - margemX &&
+          gato.y + gato.altura > portaY &&
+          gato.y < portaY + portaAlturaFrame
+        ) {
+          window.location.href = "fim.html";
+        }
+      }
+
+      // Função que desenha tudo no canvas
+      function desenhar() {
+        // Limpa todo o canvas antes de desenhar o próximo frame
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Salva o estado do contexto para aplicar a câmera
+        ctx.save();
+        ctx.translate(camera.offsetX, camera.offsetY);
+
+        // Desenha o fundo do cenário
+        ctx.drawImage(fundo, 0, 0);
+
+        // Desenha as flores
+        desenharFlores(ctx, camera);
+
+        // Desenha todos os obstáculos com as imagens e posições
+        obstaculos.forEach((obs) => {
+          ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
+        });
+
+        // Desenha o gato usando o frame atual da spritesheet
+        ctx.drawImage(
+          spriteGato,
+          gato.frameX * gato.larguraSprite,
+          gato.frameY * gato.alturaSprite,
+          gato.larguraSprite,
+          gato.alturaSprite,
+          gato.x,
+          gato.y,
+          gato.largura,
+          gato.altura
+        );
+
+        desenharPorta(ctx);
+
+        // Restaura o contexto para voltar ao estado original
+        ctx.restore();
+
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "white";
+        ctx.fillText("Flores: " + gato.floresColetadas, 20, 40);
+      }
+
+      // Loop principal do jogo, chama atualizar e desenhar repetidamente
+      function loop() {
+        atualizar();
+        camera.atualizar();
+        desenhar();
+        requestAnimationFrame(loop);
+      }
+
+      // Espera carregar as imagens antes de iniciar o loop
+      spriteGato.onload = () => {
+        fundo.onload = () => {
+          camera.larguraCenario = fundo.width;
+          camera.alturaCenario = fundo.height;
+          loop();
+        };
+        if (fundo.complete) {
+          camera.larguraCenario = fundo.width;
+          camera.alturaCenario = fundo.height;
+          loop();
+        }
+      };
+
+      if (spriteGato.complete && fundo.complete) {
+        camera.larguraCenario = fundo.width;
+        camera.alturaCenario = fundo.height;
+        loop();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000; /* ou outra cor de fundo */
+}
+canvas {
+  /* Adiciona uma borda para visualização (opcional) */
+  cursor: url(../IMG/pata.png), auto;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Mantém a proporção original do canvas */
+  width: min(100vw, calc(100vh * 1.5));
+  height: min(100vh, calc(100vw / 1.5));
+  transform: translate(-50%, -50%);
+  background: #000;
+}

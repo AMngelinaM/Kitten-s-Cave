@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tela final</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #meuBotao {
+        background: none;
+        border: none;
+        position: absolute;
+        left: 80%;
+        top: 80%;
+        transform: translate(-50%, -50%);
+        cursor: url("./IMG/pata.png"), auto;
+      }
+      :hover#meuBotao img {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+      }
+      body,
+      html {
+        cursor: url("./IMG/pata.png"), auto;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="meuBotao">
+      <img src="./IMG/voltar.png" alt="Botão" style="width: 200px" />
+    </button>
+
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Configurações do spritesheet
+      const sprite = new Image();
+      sprite.src = "./IMG/fim.png"; // seu spritesheet
+
+      const totalFrames = 6; // quantidade de frames
+      const frameWidth = 800; // largura de cada frame
+      const frameHeight = 500; // altura de cada frame
+      const fps = 6;
+      const frameDelay = Math.round(60 / fps);
+
+      let frameAtual = 0;
+      let frameTick = 0;
+
+      function ajustarCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", ajustarCanvas);
+      ajustarCanvas();
+
+      function atualizar() {
+        frameTick++;
+        if (frameTick >= frameDelay) {
+          frameTick = 0;
+          frameAtual = (frameAtual + 1) % totalFrames; // repete a animação
+        }
+      }
+
+      function desenhar() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Desenha o frame atual centralizado e ajustado ao tamanho do canvas
+        ctx.drawImage(
+          sprite,
+          frameAtual * frameWidth,
+          0,
+          frameWidth,
+          frameHeight,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+      }
+
+      function loop() {
+        atualizar();
+        desenhar();
+        requestAnimationFrame(loop);
+      }
+
+      sprite.onload = () => {
+        loop();
+      };
+
+      document.getElementById("meuBotao").onclick = function () {
+        window.location.href = "./index.html";
+      };
+    </script>
+  </body>
+</html>
